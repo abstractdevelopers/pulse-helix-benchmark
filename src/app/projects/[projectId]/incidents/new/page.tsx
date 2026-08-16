@@ -18,6 +18,11 @@ export default async function NewIncidentPage({
 
   if (!projectData) redirect("/");
 
+  async function handleCreate(formData: FormData) {
+    "use server";
+    await createIncidentAction(projectId, formData);
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-8">
@@ -36,7 +41,7 @@ export default async function NewIncidentPage({
       </div>
 
       <form
-        action={createIncidentAction.bind(null, projectId)}
+        action={handleCreate}
         className="card space-y-6 rounded-lg p-8 shadow"
       >
         <div>

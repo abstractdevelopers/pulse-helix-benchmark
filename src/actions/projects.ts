@@ -8,6 +8,7 @@ import {
   incidents,
   comments,
   timelineEvents,
+  users,
 } from "@/db/schema";
 import { eq, and, or, ilike, desc, asc, count, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -24,10 +25,7 @@ import { redirect } from "next/navigation";
 
 // --- Projects ---
 
-export async function createProjectAction(
-  prevState: unknown,
-  formData: FormData
-) {
+export async function createProjectAction(formData: FormData) {
   const user = await getSession();
   if (!user) redirect("/login");
 
@@ -37,7 +35,7 @@ export async function createProjectAction(
   });
 
   if (!result.success) {
-    return { error: result.error.issues[0].message };
+    redirect(`/projects/new?error=${encodeURIComponent(result.error.issues[0].message)}`);
   }
 
   const { name, description } = result.data;
@@ -58,11 +56,7 @@ export async function createProjectAction(
   redirect(`/projects/${project.id}`);
 }
 
-export async function updateProjectAction(
-  projectId: string,
-  prevState: unknown,
-  formData: FormData
-) {
+export async function updateProjectAction(projectId: string, formData: FormData) {
   const user = await getSession();
   if (!user) redirect("/login");
 
@@ -72,7 +66,7 @@ export async function updateProjectAction(
   });
 
   if (!result.success) {
-    return { error: result.error.issues[0].message };
+    redirect(`/projects/${projectId}/settings?error=${encodeURIComponent(result.error.issues[0].message)}`);
   }
 
   await db
@@ -84,6 +78,7 @@ export async function updateProjectAction(
     .where(eq(projects.id, projectId));
 
   revalidatePath(`/projects/${projectId}`);
+  redirect(`/projects/${projectId}/settings`);
 }
 
 export async function deleteProjectAction(projectId: string) {
@@ -140,7 +135,6 @@ export async function getProjectWithMembers(projectId: string) {
 
 export async function createIncidentAction(
   projectId: string,
-  prevState: unknown,
   formData: FormData
 ) {
   const user = await getSession();
@@ -154,7 +148,7 @@ export async function createIncidentAction(
   });
 
   if (!result.success) {
-    return { error: result.error.issues[0].message };
+    redirect(`/projects/${projectId}/incidents/new?error=${encodeURIComponent(result.error.issues[0].message)}`);
   }
 
   const { title, description, severity, assigneeId } = result.data;
@@ -184,7 +178,6 @@ export async function createIncidentAction(
 
 export async function updateIncidentAction(
   incidentId: string,
-  prevState: unknown,
   formData: FormData
 ) {
   const user = await getSession();
@@ -199,7 +192,8 @@ export async function updateIncidentAction(
   });
 
   if (!result.success) {
-    return { error: result.error.issues[0].message };
+    const returnTo = formData.get("returnTo") ?? `/projects/incidents/${incidentId}`;
+    redirect(`${returnTo}?error=${encodeURIComponent(result.error.issues[0].message)}`);
   }
 
   const { title, description, status, severity, assigneeId } = result.data;
@@ -210,7 +204,7 @@ export async function updateIncidentAction(
     .from(incidents)
     .where(eq(incidents.id, incidentId));
 
-  if (!current) return { error: "Incident not found" };
+  if (!current) return redirect(`/projects/incidents/${incidentId}`);
 
   const updates: Record<string, unknown> = { updatedAt: new Date() };
 
@@ -267,11 +261,11 @@ export async function updateIncidentAction(
   await db.update(incidents).set(updates).where(eq(incidents.id, incidentId));
 
   revalidatePath(`/projects/*/incidents/${incidentId}`);
+  redirect(`/projects/${current.projectId}/incidents/${incidentId}`);
 }
 
 export async function addCommentAction(
   incidentId: string,
-  prevState: unknown,
   formData: FormData
 ) {
   const user = await getSession();
@@ -282,7 +276,7 @@ export async function addCommentAction(
   });
 
   if (!result.success) {
-    return { error: result.error.issues[0].message };
+    redirect(`/projects/incidents/${incidentId}?error=${encodeURIComponent(result.error.issues[0].message)}`);
   }
 
   await db.insert(comments).values({
@@ -299,6 +293,7 @@ export async function addCommentAction(
   });
 
   revalidatePath(`/projects/*/incidents/${incidentId}`);
+  redirect(`/projects/incidents/${incidentId}`);
 }
 
 export async function getIncident(incidentId: string) {
@@ -393,7 +388,7 @@ export async function searchIncidents(
 
   const offset = (page - 1) * limit;
 
-  const conditions = [eq(incidents.projectId, projectId)];
+  const conditions: any[] = [eq(incidents.projectId, projectId)];
 
   if (q) {
     conditions.push(

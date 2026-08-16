@@ -175,7 +175,7 @@ export default async function SearchPage({
             </table>
 
             {/* Pagination */}
-            {result.totalPages > 1 && (
+            {result.totalPages && result.totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4">
                 <p className="text-sm text-gray-500">
                   Page {result.page} of {result.totalPages}
@@ -189,7 +189,7 @@ export default async function SearchPage({
                       Previous
                     </Link>
                   )}
-                  {result.page < result.totalPages && (
+                  {result.page < (result.totalPages ?? 1) && (
                     <Link
                       href={`${baseUrl}?page=${result.page + 1}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}${sp.status ? `&status=${sp.status}` : ""}${sp.severity ? `&severity=${sp.severity}` : ""}${sp.assigneeId ? `&assigneeId=${sp.assigneeId}` : ""}`}
                       className="btn btn-secondary text-sm"

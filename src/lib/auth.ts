@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { db } from "./index";
-import { users, sessions } from "./schema";
+import { db } from "@/db";
+import { users, sessions } from "@/db/schema";
 import { hash, compare } from "bcryptjs";
 import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
@@ -79,8 +79,8 @@ export async function getSession() {
   return validateSession(token);
 }
 
-export function setSessionCookie(token: string, expiresAt: Date) {
-  const cookieStore = cookies();
+export async function setSessionCookie(token: string, expiresAt: Date) {
+  const cookieStore = await cookies();
   cookieStore.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -90,8 +90,8 @@ export function setSessionCookie(token: string, expiresAt: Date) {
   });
 }
 
-export function clearSessionCookie() {
-  const cookieStore = cookies();
+export async function clearSessionCookie() {
+  const cookieStore = await cookies();
   cookieStore.set("session", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

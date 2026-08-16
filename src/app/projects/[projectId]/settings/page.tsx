@@ -20,6 +20,16 @@ export default async function SettingsPage({
 
   const { project } = projectData;
 
+  async function handleUpdate(formData: FormData) {
+    "use server";
+    await updateProjectAction(projectId, formData);
+  }
+
+  async function handleDelete(formData: FormData) {
+    "use server";
+    await deleteProjectAction(projectId);
+  }
+
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
@@ -38,7 +48,7 @@ export default async function SettingsPage({
       <div className="card rounded-lg p-6 shadow">
         <h2 className="text-lg font-semibold text-gray-900">Edit Project</h2>
         <form
-          action={updateProjectAction.bind(null, projectId)}
+          action={handleUpdate}
           className="mt-4 space-y-4"
         >
           <div>
@@ -62,7 +72,7 @@ export default async function SettingsPage({
               id="description"
               name="description"
               rows={4}
-              defaultValue={project.description}
+              defaultValue={project.description ?? ""}
               className="input resize-none"
             />
           </div>
@@ -104,7 +114,7 @@ export default async function SettingsPage({
           timeline events. This action cannot be undone.
         </p>
         <form
-          action={deleteProjectAction.bind(null, projectId)}
+          action={handleDelete}
           className="mt-4"
         >
           <button

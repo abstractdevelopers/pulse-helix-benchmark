@@ -28,6 +28,16 @@ export default async function IncidentDetailPage({
     );
   }
 
+  async function handleUpdate(formData: FormData) {
+    "use server";
+    await updateIncidentAction(incidentId, formData);
+  }
+
+  async function handleComment(formData: FormData) {
+    "use server";
+    await addCommentAction(incidentId, formData);
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -86,7 +96,7 @@ export default async function IncidentDetailPage({
       <div className="card rounded-lg p-6 shadow">
         <h2 className="text-lg font-semibold text-gray-900">Update Incident</h2>
         <form
-          action={updateIncidentAction.bind(null, incidentId)}
+          action={handleUpdate}
           className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
         >
           <div>
@@ -162,7 +172,7 @@ export default async function IncidentDetailPage({
         </div>
 
         <form
-          action={addCommentAction.bind(null, incidentId)}
+          action={handleComment}
           className="mt-6 space-y-3"
         >
           <div>
@@ -190,7 +200,6 @@ export default async function IncidentDetailPage({
         <div className="mt-4 space-y-0">
           {incident.timeline?.map((event, index) => (
             <div key={event.id} className="relative flex gap-4">
-              {/* Timeline line */}
               {index < (incident.timeline?.length ?? 0) - 1 && (
                 <div className="absolute left-4 top-10 h-full w-0.5 -translate-x-1/2 bg-gray-200" />
               )}
